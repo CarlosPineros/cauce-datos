@@ -1,0 +1,66 @@
+# Hooks que se ejecutan antes de cada commit.
+# Instalar una vez:   pre-commit install
+# Ejecutar a mano:    pre-commit run --all-files
+repos:
+  # Higiene general y detección de llaves privadas
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: detect-private-key
+
+  # Detección de secretos (contraseñas, tokens, llaves de nube)
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: ^tests/
+
+  # Linter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.5
+    hooks:
+      - id: ruff-check
+        args: ["--fix"]
+
+  # Análisis de seguridad del código
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.9.4
+    hooks:
+      - id: bandit
+        args: ["-c", "pyproject.toml", "-q"]
+        additional_dependencies: ["bandit[toml]"]
+
+  - repo: local
+    hooks:
+      # Bloquea cualquier archivo .env aunque alguien fuerce `git add -f`
+      - id: no-env-files
+        name: Bloquear archivos .env con credenciales
+        entry: "Los archivos .env contienen credenciales y no deben subirse. Usa .env.example."
+        language: fail
+        files: '(^|/)\.env(\..+)?$'
+        exclude: '(^|/)\.env\.example$'
+
+      # Pruebas unitarias
+      - id: pytest
+        name: pytest
+        entry: python -m pytest -q
+        language: python
+        pass_filenames: false
+        always_run: true
+        additional_dependencies:
+          - pytest>=8
+          - pydantic>=2.6
+          - pydantic-settings>=2.2
+          - psycopg[binary]>=3.1
+          - psycopg-pool>=3.2
+          - boto3>=1.34
+          - pandas>=2.2
+          - numpy>=1.26

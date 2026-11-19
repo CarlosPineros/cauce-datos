@@ -1,0 +1,27 @@
+# Credenciales (nunca subir)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+
+# Entorno virtual y cachés
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Datos generados localmente
+data/*
+!data/.gitkeep
+
+# Logs y SO
+*.log
+.DS_Store
+Thumbs.db

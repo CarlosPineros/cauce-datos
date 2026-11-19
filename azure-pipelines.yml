@@ -1,0 +1,52 @@
+# Pipeline equivalente a .github/workflows/ci.yml para Azure DevOps.
+trigger:
+  branches:
+    include: [main, develop]
+
+pr:
+  branches:
+    include: ["*"]
+
+pool:
+  vmImage: ubuntu-latest
+
+strategy:
+  matrix:
+    py312:
+      pythonVersion: "3.12"
+    py313:
+      pythonVersion: "3.13"
+
+variables:
+  PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+  PRE_COMMIT_HOME: $(Pipeline.Workspace)/.pre-commit
+
+steps:
+  - checkout: self
+    persistCredentials: false
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: $(pythonVersion)
+    displayName: Python $(pythonVersion)
+
+  - task: Cache@2
+    inputs:
+      key: 'pip | "$(Agent.OS)" | "$(pythonVersion)" | requirements.txt | requirements-dev.txt'
+      path: $(PIP_CACHE_DIR)
+    displayName: Caché de pip
+
+  - task: Cache@2
+    inputs:
+      key: 'pre-commit | "$(Agent.OS)" | "$(pythonVersion)" | .pre-commit-config.yaml'
+      path: $(PRE_COMMIT_HOME)
+    displayName: Caché de pre-commit
+
+  - script: pip install -r requirements-dev.txt
+    displayName: Instalar dependencias
+
+  - script: pre-commit run --all-files --show-diff-on-failure
+    displayName: Hooks de pre-commit (higiene, secretos, ruff, bandit, pytest)
+
+  - script: pip-audit -r requirements.txt
+    displayName: Auditoría de dependencias (CVE)

@@ -1,0 +1,45 @@
+[project]
+name = "modelo-etl"
+version = "1.0.0"
+description = "ETL por capas: S3 -> limpieza -> modelos descriptivo y de regresión -> PostgreSQL"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+    "psycopg[binary]>=3.1",
+    "psycopg-pool>=3.2",
+    "boto3>=1.34",
+    "pandas>=2.2",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6", "bandit>=1.7", "pip-audit>=2.7", "pre-commit>=3.7"]
+
+# ------------------------------------------------------------------ pytest
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+
+# -------------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = [".venv", "data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "BLE", "C4", "SIM", "RUF"]
+ignore = [
+    "RUF001", "RUF002", "RUF003",  # caracteres unicode (tildes, ·, ², −) son intencionales en textos en español
+    "UP007", "UP045",              # Optional[...] se mantiene por compatibilidad con pydantic
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106"]          # assert y valores de prueba
+"scripts/**" = ["S311"]
+
+# ------------------------------------------------------------------ bandit
+[tool.bandit]
+exclude_dirs = [".venv", "tests"]
